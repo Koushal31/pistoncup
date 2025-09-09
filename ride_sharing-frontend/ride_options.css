@@ -1,0 +1,105 @@
+/* ride_options.css */
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #377dff;
+  color: white;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.menu-container {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+.menu-button {
+  background-color: #2052a6;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.3s;
+}
+
+.menu-button:hover {
+  background-color: #163d72;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 45px;
+  left: 0;
+  background: white;
+  color: #212121;
+  border-radius: 8px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+  width: 150px;
+  display: none;
+  flex-direction: column;
+  padding: 8px 0;
+}
+
+.dropdown-menu.show {
+  display: flex;
+}
+
+.dropdown-menu button {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 10px 16px;
+  width: 100%;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #212121;
+  transition: background-color 0.2s;
+}
+
+.dropdown-menu button:hover {
+  background-color: #e1e1e1;
+}
+
+.container {
+  background: white;
+  border-radius: 16px;
+  padding: 40px 60px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  text-align: center;
+  width: 320px;
+  color: #212121;
+  z-index: 1;
+}
+
+h1 {
+  margin-bottom: 40px;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 16px 0;
+  margin: 20px 0;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #377dff;
+  color: white;
+  transition: background-color 0.3s;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background-color: #2052a6;
+}

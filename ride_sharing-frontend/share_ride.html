@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Share a Ride</title>
+  <style>
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      height: 100vh;
+      display: flex; justify-content: center; align-items: center;
+      position: relative;
+      background: url('img3.png') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 40px 50px;
+      max-width: 450px;
+      width: 90%;
+      box-sizing: border-box;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      color: #212121;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    h2 { margin-bottom: 30px; }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    label {
+      font-weight: 600;
+      text-align: left;
+      margin-bottom: 4px;
+    }
+    select, input {
+      padding: 12px 16px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1.5px solid #ccc;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+    select:focus, input:focus { border-color: #377dff; }
+    button {
+      background: #377dff;
+      color: white;
+      border: none;
+      padding: 14px 0;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 10px;
+    }
+    button:hover { background: #2052a6; }
+    a {
+      display: inline-block;
+      margin-top: 20px;
+      color: #377dff;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .location-group {
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Share a Ride</h2>
+    <form id="shareRideForm">
+
+      <div class="location-group">
+        <label>Starting Location</label>
+        <select id="startState" name="startState" required>
+          <option value="" disabled selected>Select State</option>
+        </select>
+        <select id="startCity" name="startCity" required disabled>
+          <option value="" disabled selected>Select City</option>
+        </select>
+        <input type="text" name="startPoint" placeholder="Starting Point (e.g. Landmark)" required />
+      </div>
+
+      <div class="location-group">
+        <label>Destination</label>
+        <select id="destState" name="destState" required>
+          <option value="" disabled selected>Select State</option>
+        </select>
+        <select id="destCity" name="destCity" required disabled>
+          <option value="" disabled selected>Select City</option>
+        </select>
+        <input type="text" name="destPoint" placeholder="Destination Point (e.g. Landmark)" required />
+      </div>
+
+      <input type="datetime-local" name="dateTime" required />
+      <input type="number" name="availableSeats" min="1" max="10" placeholder="Available Seats" required />
+      <button type="submit">Offer Ride</button>
+    </form>
+    <a href="ride_options.html">Back to Ride Options</a>
+  </div>
+
+  <script>
+    const indiaLocations = {
+      "Uttar Pradesh": ["Lucknow", "Kanpur", "Varanasi", "Agra", "Noida"],
+      "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad"],
+      "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem"],
+      "Karnataka": ["Bengaluru", "Mysuru", "Mangalore", "Hubli", "Belgaum"],
+      "West Bengal": ["Kolkata", "Asansol", "Siliguri", "Durgapur", "Howrah"],
+      "Delhi": ["New Delhi", "Dwarka", "Rohini", "Vasant Kunj", "Saket"],
+      "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar"],
+      "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Bikaner"],
+      "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Tirupati"],
+      "Punjab": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda"]
+    };
+
+    function populateSelect(select, options) {
+      select.innerHTML = '<option value="" disabled selected>Select City</option>';
+      options.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt;
+        option.textContent = opt;
+        select.appendChild(option);
+      });
+      select.disabled = false;
+    }
+
+    function populateStates(select) {
+      Object.keys(indiaLocations).forEach(state => {
+        const option = document.createElement('option');
+        option.value = state;
+        option.textContent = state;
+        select.appendChild(option);
+      });
+    }
+
+    const startState = document.getElementById('startState');
+    const startCity = document.getElementById('startCity');
+    const destState = document.getElementById('destState');
+    const destCity = document.getElementById('destCity');
+
+    populateStates(startState);
+    populateStates(destState);
+
+    startState.addEventListener('change', () => {
+      const cities = indiaLocations[startState.value];
+      populateSelect(startCity, cities);
+    });
+
+    destState.addEventListener('change', () => {
+      const cities = indiaLocations[destState.value];
+      populateSelect(destCity, cities);
+    });
+
+    document.getElementById('shareRideForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        alert('Please login first.');
+        window.location.href = 'index.html';
+        return;
+      }
+
+      const form = e.target;
+      const data = {
+        startState: form.startState.value,
+        startCity: form.startCity.value,
+        startPoint: form.startPoint.value.trim(),
+        destState: form.destState.value,
+        destCity: form.destCity.value,
+        destPoint: form.destPoint.value.trim(),
+        dateTime: form.dateTime.value,
+        availableSeats: parseInt(form.availableSeats.value)
+      };
+
+      try {
+        const res = await fetch('http://localhost:5000/share-ride', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          alert('Failed to share ride: ' + text);
+          return;
+        }
+
+        alert('Ride shared successfully!');
+        form.reset();
+        startCity.disabled = true;
+        destCity.disabled = true;
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Book a Ride</title>
+  <style>
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: url('img3.png') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      min-height: 100vh;
+      display: flex; justify-content: center; align-items: center;
+      position: relative;
+    }
+    body::before {
+      content: ""; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 0; pointer-events: none;
+    }
+    .container {
+      background: rgba(255,255,255,0.95);
+      border-radius: 16px;
+      padding: 40px 50px;
+      max-width: 600px;
+      width: 90%;
+      box-sizing: border-box;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      color: #212121;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      overflow-y: auto;
+      max-height: 90vh;
+    }
+    h2 {margin-bottom: 30px;}
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+      border: 1.5px solid #ccc;
+      font-size: 1rem;
+    }
+    .ride-list {
+      text-align: left;
+      margin-top: 20px;
+    }
+    .ride-item {
+      border-bottom: 1px solid #ccc;
+      padding: 12px 0;
+    }
+    .ride-item:last-child {
+      border-bottom: none;
+    }
+    .ride-item strong {
+      color: #377dff;
+    }
+    a {
+      display: inline-block; margin-top: 20px;
+      color: #377dff;
+      text-decoration: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Available Rides</h2>
+
+    <label>Starting Location</label>
+    <select id="startState" required>
+      <option value="" disabled selected>Select State</option>
+    </select>
+    <select id="startCity" required disabled>
+      <option value="" disabled selected>Select City</option>
+    </select>
+
+    <label>Destination</label>
+    <select id="destState" required>
+      <option value="" disabled selected>Select State</option>
+    </select>
+    <select id="destCity" required disabled>
+      <option value="" disabled selected>Select City</option>
+    </select>
+
+    <div id="ridesContainer" class="ride-list"></div>
+    <a href="ride_options.html">Back to Ride Options</a>
+  </div>
+
+<script>
+  const indiaLocations = {
+    "Uttar Pradesh": ["Lucknow", "Kanpur", "Varanasi", "Agra", "Noida"],
+    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad"],
+    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem"],
+    "Karnataka": ["Bengaluru", "Mysuru", "Mangalore", "Hubli", "Belgaum"],
+    "West Bengal": ["Kolkata", "Asansol", "Siliguri", "Durgapur", "Howrah"],
+    "Delhi": ["New Delhi", "Dwarka", "Rohini", "Vasant Kunj", "Saket"],
+    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar"],
+    "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Bikaner"],
+    "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Tirupati"],
+    "Punjab": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda"]
+  };
+
+  const startState = document.getElementById('startState');
+  const startCity = document.getElementById('startCity');
+  const destState = document.getElementById('destState');
+  const destCity = document.getElementById('destCity');
+  const ridesContainer = document.getElementById('ridesContainer');
+
+  function populateSelect(select, options) {
+    select.innerHTML = '<option value="" disabled selected>Select City</option>';
+    options.forEach(opt => {
+      const option = document.createElement('option');
+      option.value = opt;
+      option.textContent = opt;
+      select.appendChild(option);
+    });
+    select.disabled = false;
+  }
+
+  function populateStates(select) {
+    Object.keys(indiaLocations).forEach(state => {
+      const option = document.createElement('option');
+      option.value = state;
+      option.textContent = state;
+      select.appendChild(option);
+    });
+  }
+
+  populateStates(startState);
+  populateStates(destState);
+
+  startState.addEventListener('change', () => {
+    populateSelect(startCity, indiaLocations[startState.value]);
+    ridesContainer.innerHTML = '';
+  });
+
+  destState.addEventListener('change', () => {
+    populateSelect(destCity, indiaLocations[destState.value]);
+    ridesContainer.innerHTML = '';
+  });
+
+  function clearRides() {
+    ridesContainer.innerHTML = '';
+  }
+
+  async function fetchRides() {
+    ridesContainer.textContent = 'Loading rides...';
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      alert('Please login first.');
+      window.location.href = 'index.html';
+      return;
+    }
+
+    const data = {
+      startState: startState.value,
+      startCity: startCity.value,
+      destState: destState.value,
+      destCity: destCity.value
+    };
+
+    if (!data.startState || !data.startCity || !data.destState || !data.destCity) {
+      ridesContainer.textContent = 'Please select all locations to see available rides.';
+      return;
+    }
+
+    try {
+      const res = await fetch('http://localhost:5000/available-rides', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      if (!res.ok) {
+        ridesContainer.textContent = 'Failed to load rides.';
+        return;
+      }
+      const rides = await res.json();
+
+      // Filter rides that match both start and destination states and cities
+      const filtered = rides.filter(r =>
+        r.startState === data.startState &&
+        r.startCity === data.startCity &&
+        r.destState === data.destState &&
+        r.destCity === data.destCity
+      );
+
+      if (filtered.length === 0) {
+        ridesContainer.textContent = 'No rides available for the selected locations.';
+        return;
+      }
+
+      ridesContainer.innerHTML = '';
+      filtered.forEach(r => {
+        const div = document.createElement('div');
+        div.className = 'ride-item';
+        div.innerHTML = `
+          <strong>Driver:</strong> ${r.username}<br/>
+          <strong>From:</strong> ${r.startCity}, ${r.startState}<br/>
+          <strong>To:</strong> ${r.destCity}, ${r.destState}<br/>
+          <strong>Date & Time:</strong> ${new Date(r.dateTime).toLocaleString()}<br/>
+          <strong>Available Seats:</strong> ${r.availableSeats}
+        `;
+        ridesContainer.appendChild(div);
+      });
+    } catch (e) {
+      ridesContainer.textContent = 'Error loading rides.';
+    }
+  }
+
+  // Fetch rides whenever all selects are changed and valid
+  [startCity, destCity].forEach(select => {
+    select.addEventListener('change', () => {
+      if (startCity.value && startState.value && destCity.value && destState.value) {
+        fetchRides();
+      } else {
+        ridesContainer.innerHTML = '';
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
